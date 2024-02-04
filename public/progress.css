@@ -1,0 +1,45 @@
+.form-section {
+    display: none;
+    max-height: 500px;
+    overflow: auto;
+}
+
+.equal {
+    flex:1;
+    border-radius: 5%;
+}
+
+.form-section.current{
+    display: inline;
+
+}
+
+.parslery-error-list{
+    color:red;
+}
+
+.test{
+    display: flex;
+    
+    justify-content: space-between;
+}
+
+#adultFormcontainer{
+    float: left;
+}
+
+#children-form-container{
+    float:right;
+}
+
+.familycontainer{
+   /* background-color: brown; */
+    display: flex;
+    flex: 1;
+
+}
+
+.cursing {
+
+    background-color: black;
+}

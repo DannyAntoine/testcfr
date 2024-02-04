@@ -1,0 +1,15 @@
+runtime: php73
+env: flex
+
+runtime_config:
+  document_root: public
+
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 1
+  max_instances: 10
+
+env_variables:
+  APP_ENV: production
+  APP_KEY: base64:YN5CFEshoZ3rPu5x8/FNoA1IwVNHFirNMEwUd2bmzY8=
+  # Add other environment variables as needed
