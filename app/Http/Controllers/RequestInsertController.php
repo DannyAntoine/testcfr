@@ -307,100 +307,53 @@ foreach ($_POST as $key => $value) {
     //dd([$adult_first_names, $adult_last_names, $adult_age, $adult_gender, $child_first_names,$child_last_names, $child_age,$child_gender]);
 
     /*======================THE ABOVE CODE IS FOR THE SECOND PART OF THE MULTI FORM IT WORKS ===================*/ 
-/*
-     $orderQuantities = $req->input('quantity');
 
-     // Retrieve all categories with their products and the products' inventories
-     $categories = Category::with(['products.inventories'])->get();
- 
-     $orderItems = [];
-     $categoryTotals = [];
- 
-     foreach ($categories as $category) {
-         foreach ($category->products as $product) {
-             if (isset($orderQuantities[$product->id]) && $orderQuantities[$product->id] > 0) {
-                 $quantity = $orderQuantities[$product->id];
-                 $orderItems[] = [
-                     'category' => $category->category_name,
-                     'product_name' => $product->product_name,
-                     'quantity' => $quantity
-                 ];
- 
-                 if (!isset($categoryTotals[$category->category_name])) {
-                     $categoryTotals[$category->category_name] = 0;
-                 }
-                 $categoryTotals[$category->category_name] += $quantity;
-             }
-         }
-     }
- 
-     // Log or dump the order items and category totals for debugging
-    //dd('Order Items:', $orderItems);
-    //dd('Category Totals:', $categoryTotals);
-
-
-     foreach ($orderItems as $orderItem) {
-         DB::table('requestorder')->insert([
-             'family_id' => $familyId,
-             'category' => $orderItem['category'],
-             'categoryTotal' => $categoryTotals[$orderItem['category']],
-             'requestedItem' => $orderItem['product_name'],
-             'amountNeeded' => $orderItem['quantity'],
-             'daterequested' => now()
-         ]);
-     }
-    */
-    
-    // Store selected quantities in the session before proceeding
+// Retrieve existing quantities for all categories from the session
 $existingQuantities = $req->session()->get('quantities', []);
-$newQuantities = $req->input('quantity', []);
 
-$mergedQuantities = array_merge($existingQuantities, $newQuantities);
+// Get the current category ID (this will depend on how your categories are identified)
+$categoryId = $req->input('category_id');
 
-$req->session()->put('quantities', $mergedQuantities);
-dd($req->session()->get('quantities'));
+// Ensure there's an array for the current category in the session data
+if (!isset($existingQuantities[$categoryId])) {
+    $existingQuantities[$categoryId] = [];
+}
 
-// Retrieve all categories with their products and the products' inventories
-$categories = Category::with(['products.inventories'])->get();
+// Loop through the new quantities provided by the user for the current category
+foreach ($req->input('quantity', []) as $productId => $quantity) {
+    // Ensure the quantity is valid (not null or empty)
+    if ($quantity !== null && $quantity !== '') {
+        // Create an array with product ID and its corresponding quantity
+        $quantityData = [
+            'productid' => $productId,
+            'quantity' => $quantity
+        ];
 
-$orderItems = [];
-$categoryTotals = [];
-
-foreach ($categories as $category) {
-    foreach ($category->products as $product) {
-        if (isset($mergedQuantities[$product->id]) && $mergedQuantities[$product->id] > 0) {
-            $quantity = $mergedQuantities[$product->id];
-            $orderItems[] = [
-                'category' => $category->category_name,
-                'product_name' => $product->product_name,
-                'quantity' => $quantity
-            ];
-
-            if (!isset($categoryTotals[$category->category_name])) {
-                $categoryTotals[$category->category_name] = 0;
+        // Check if the product already exists in the session for the current category
+        $found = false;
+        foreach ($existingQuantities[$categoryId] as &$existingQuantity) {
+            if ($existingQuantity['productid'] == $productId) {
+                // Update the quantity for the existing product
+                $existingQuantity['quantity'] = $quantity;
+                $found = true;
+                break;
             }
-            $categoryTotals[$category->category_name] += $quantity;
+        }
+
+        // If the product is not found, add it to the current category's array in the session
+        if (!$found) {
+            $existingQuantities[$categoryId][] = $quantityData;
         }
     }
 }
 
-// Optional: Log or dump the order items and category totals for debugging
-// dd('Order Items:', $orderItems);
-// dd('Category Totals:', $categoryTotals);
+// Save the updated quantities back into the session
+$req->session()->put('quantities', $existingQuantities);
 
-foreach ($orderItems as $orderItem) {
-    DB::table('requestorder')->insert([
-        'family_id' => $familyId,
-        'category' => $orderItem['category'],
-        'categoryTotal' => $categoryTotals[$orderItem['category']],
-        'requestedItem' => $orderItem['product_name'],
-        'amountNeeded' => $orderItem['quantity'],
-        'daterequested' => now()
-    ]);
-}
-
-// Clear session after order is submitted
-$req->session()->forget('quantities');
+// Output session data for debugging
+echo "<pre>";
+print_r($req->session()->get('quantities'));
+dd("breakpoint");
 
 
 
