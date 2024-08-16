@@ -1,479 +1,472 @@
+<?php
 
-@extends('dashboard-layout')
+namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use DB;
+use App\Http\Controllers\Controller;
+use App\Http\Requests;
+use App\Models\baths;
+use App\Models\FamilyDemographicsModel;
+use App\Models\Family;
+use App\Models\pendingcases;
+use Carbon\Carbon;
+use App\Events\NewPendingCase;
+use App\Models\ClientDataModel;
+use App\Models\Inventory;
+use App\Models\Category;
+use App\Models\RequestOrderModel;
+use  PDF;
+use Illuminate\Support\Facades\Session;
 
-@section('title','Dashboard')
 
-@section('content')
 
-@if(session('success'))
-    <div class="alert alert-success">
-        {{ session('success') }}
-    </div>
-@endif
 
 
 
+class RequestInsertController extends Controller
+{
+    // the following function is responsible for rendering the form view
+   public function insform(){
+       return view('requestform');
+   }
 
-<div class="content-body">
 
 
 
-
-
-
-
-<div class="row">
-                    <div class="col-xl-12 col-xxl-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title"> {{ now()->year }}  Request Form </h4>
-                            </div>
-                            <div class="card-body">
-
-
-                            <div class="row">
-                    <div class="col-xl-12 col-xxl-12">
-                        <div class="card">
-                            <div class="card-header">
-                               
-                            </div>
-                            <div class="card-body">
-                                <form action="{{url('requestFormData')}}" id="step-form-horizontal" class="step-form-horizontal" method="POST" >
-                                    
-                               
-
-                                    <div>
-                                        <h4>Client Info</h4>
-                                        @csrf
-                                        <section >
-                                           
-                                            
-                                            <div class="row">
-
-                                                <div class="col-lg-2 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">First Name*</label>
-                                                        <input type="text" name="firstName" class="form-control " placeholder="FirstName"  >
-                                                    </div>
-                                                  </div>
-                                                  
-                                                 <div class="col-lg-2 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Last Name*</label>
-                                                        <input type="text" name="lastName" class="form-control" placeholder="LastName" >
-                                                    </div>
-                                                 </div>
-
-
-                                              
-                            
-                                               <!-- drop dowwn with agency -->
-                                               <div class="form-group col-md-4" >
-                                                                    <label>Select agency* </label>
-                                                                    <select class="form-control" id="inputState" name="agency" >
-                                                                        <option selected="" >Choose...</option>
-                                                                        @foreach ($agencyModel as $agency)
-                                                                       <option value="{{ $agency['agencyname']}}">{{ $agency['agencyname']}}</option>
-                                                                        @endforeach
-                                                                        
-                                                                    </select>
-                                                </div>
-
-                                                 
-                                                <div class="col-lg-2 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Advocate First Name*</label>
-                                                        <input type="text" name="advocatefirstName" class="form-control" placeholder="FirstName" >
-                                                    </div>
-                                                  </div>
-                                               
-                                                 <div class="col-lg-2 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Advocate Last Name*</label>
-                                                        <input type="text" name="advocatelastName" class="form-control" placeholder="LastName" >
-                                                    </div>
-                                                 </div>
-                                               
-                                               </div> <!--  check here end of 1st row -->
-                                                 
-                                                   <div class="row"> <!-- start row 2 -->
-                                                       
-                                                   <div class="col-lg-4 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Phone Number*</label>
-                                                        <input type="text" name="phone_number" class="form-control" placeholder="Phone Number" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" title="Please enter a valid phone number in the format XXX-XXX-XXXX" oninput="formatPhoneNumber(this)" >
-                                                    </div>
-                                                </div>
-
-
-                                                <div class="col-lg-4 mb-4">
-                                                    <div class="form-group form-material" >
-                                                        <label class="text-label">Referral Date*</label>
-                                                        <input type="date" name="receivedDate" class="  form-control" id="receivedDate" placeholder="Enter the date case was received"  >
-                                                    </div>
-                                                </div>
-
-
-                                                <div class="col-lg-4 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Move In Date*</label>
-                                                        <input type="date" name=" moveInDate"   class="form-control" id="moveInDate" >
-                                                    </div>
-                                                </div>
-                                                
-
-   </div> <!--  check here end of 2nd row -->
-                                                
-                                                   <div class="row"> <!-- 3rd row -->
-                                                    <!-- drop dowwn with gender -->
-                                                    <div class="form-group col-md-3">
-                                                    <label>Select Gender*</label>
-                                                    <select class="form-control" id="inputState" name="Gender" >
-                                                    <option selected disabled>Choose...</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    </select>
-                                                    </div>
-
-                                                    
-                                                 
-
-                                                     <!-- drop dowwn with maritial status -->
-                                                     <div class="form-group col-md-3">
-                                                    <label>Select Maritial Status*</label>
-                                                    <select class="form-control" id="inputState" name="MaritalStatus" >
-                                                    <option selected disabled>Choose...</option>
-                                                    <option value="Married">Married</option>
-                                                    <option value="Divorced">Divorced</option>
-                                                    <option value="Separated">Separated</option>
-                                                    <option value="Widowed">Widowed</option>
-                                                    <option value="Single">Single</option>
-                                                    <option value="Never Married">Never Married</option>
-                                                    </select>
-                                                    </div>
-
-                                                             
-
-                                                             
-                                                   
-                                                <div class="form-group col-md-3">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Date of Birth*</label>
-                                                        <input type="date" name="dob" class=" form-control" placeholder="DateOfBirth" id="dob">
-                                                    </div>
-                                                </div>
-
-
-                                                              <div class="form-group col-md-3">
-                                                                  <div class="form-group">
-                                                                  <label class="text-label">Email*</label>
-                                                                <input type="email" placeholder="something@example.com" name="email" class="form-control" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Please enter a valid email address" >
-                                                                </div>
-                                                                </div>
-
-                                                   </div> <!-- end of 3rd row -->
-
-                                                   <div class ="row"> <!-- start of address row -->
-
-                                                       <div class="col-lg-4 mb-4">
-                                                         <div class="form-group">
-                                                        <label class="text-label"> Address 1*</label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control"  name="address" id="inputGroupPrepend2" aria-describedby="inputGroupPrepend2" placeholder="address 1" >
-                                                        </div>
-                                                     </div>   
-                                                    </div>
-
-                                                    <div class="col-lg-4 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label"> Address 2*</label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control"  name="address2" id="inputGroupPrepend2" aria-describedby="inputGroupPrepend2" placeholder="address 2" >
-                                                        </div>
-                                                     </div>   
-                                                </div>
-                                                 
-                                                <div class="col-lg-4 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label"> City* </label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control"  name="city" id="inputGroupPrepend2" aria-describedby="inputGroupPrepend2" placeholder="City" >
-                                                        </div>
-                                                     </div>   
-                                                </div>
-
-                                                <div class="col-lg-4 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label"> State*</label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control"  name="state" id="inputGroupPrepend2" aria-describedby="inputGroupPrepend2" placeholder="State" >
-                                                        </div>
-                                                     </div>   
-                                                </div>
-
-                                                <div class="col-lg-4 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label"> Zip Code*</label>
-                                                        <div class="input-group">
-                                                            <input type="text" class="form-control"  name="zip" id="inputGroupPrepend2" aria-describedby="inputGroupPrepend2" placeholder="zipCode" >
-                                                        </div>
-                                                     </div>   
-                                                </div>
-                                                       
-                                                              <div class="col-lg-2 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Number of Adults*</label>
-                                                        <input type="number" name="numberofAdults" id = "numberofAdults" min ="0"   class="form-control" onchange="addAdultFields()" required>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-lg-2 mb-4">
-                                                    <div class="form-group">
-                                                        <label class="text-label">Number of Children*</label>
-                                                        <input type="number" name="numberofChildren" id = "numberofChildren" min ="0"  class="form-control" onchange="addChildrenFields()" required >
-                                                    </div>
-                                                </div>
-                                                
-                                              </div> <!-- end of address row  -->
-
-                                            
-
-                                    
-                                                <div class="row">
-
-                                     
-
-                                                </div>
-                                            
-                                    
-                                               
-                                        </section>
-                
-
-
-
-                                        <h4>Family Deographics</h4>
-                                        
-                                        <section >
-                                           
-                                        
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title">Family Deographics </h4>
-                            </div>
-                            <div class="card-body">
-   
-                                                
-                                                
-                                         <div class = "familycontainer family-demo-scrollbar">
-
-                                         <div id="adultFormcontainer" ></div>
-                                        <div id="children-form-container" ></div>
-
-                                        </div>
-
-                            </div>
-                        </div>
-                                        </section>
-                                        
-                                        
-                                      
-             <h4>Order Section</h4>
-<section>
-  <div class="row">
-     <div class="col-12">
-           <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title">Order Section</h4>
-                            </div>          
-                            <div class="card-body family-demo-scrollbar">
-                                <div class="table-responsive ">
-                                <table id="example" class="display" style="min-width: 845px;">
-                                 <thead>
-                                 <tr>
-                                    <th>AVALIABILITY</th>
-                                    <th>STATUS</th>
-                                    <th>CATEGORY</th>
-                                    <th>ITEM NAME</th>
-                                    <th>REQUESTED</th>
-                                    
-                                  </tr>
-                                </thead>
-                                  <tbody>
-                               @foreach($fetchInventoryData as $data)
-                               @foreach($data->products as $product)
-                               @foreach($product->inventories as $inventory)
-                              <tr>
-                                <td>{{$inventory->avaliability}}</td>
-                                <td style="color: {{ $inventory->status === 'IN STOCK' ? 'green' : 'red' }};">{{ $inventory->status }}</td>
-
-                                
-
-                                <td>{{ $data->category_name }}</td>
-                               
-                                <td>{{ $product->product_name }}</td>
-                                
-                                <td>
-                              
-                                  <!--  <input type="number" name="" id="" min="0" class="form-control"> -->
-                                  <input type="number" name="quantity[{{$product['id']}}]" id = "quantity" min="0" class="form-control"  value="{{ old('quantity.' . $product['id']) }}">
-                                  
-                                </td>
-                               
-
-                                
-                              </tr>
-                              @endforeach
-                               @endforeach
-                               @endforeach
-                               </tbody>
-
-                              <tfoot>
-                                            <tr>
-                                                <th>AVALIABILITY</th>
-                                                <th>STATUS</th>
-                                                <th>CATEGORY</th>
-                                                <th>ITEM NAME</th>
-                                                <th>REQUESTED</th>
-                                                
-
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                    <br><br>
-                                </div>
-                            </div>
-             </div>
-        </div>
-    </div>
-</section>
-
-
- 
-
-
-
-                                        
-<h4>  Review </h4>
-<section>
-   <div>
-      <div class ="col-12">  
-           <div class ="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Review Section</h4>
-                    </div>                                       
-                 <div id="BackOrder" class="">
-                
-                        
-                           
-                            <div class="card-body">
-                                
-                             <h3> this will be for a review before submit   </h3>   
-                       
-                             </div>
-    
-    
-                  </div>
-              
-           </div>                                               
-       </div>                                     
-    </div>
-</section>
-
-
-
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    
+    public function postdata(Request $req){
     
       
 
         
-    </div>
+      // handeling first serction of multi step form 
+         $firstname = $req->input('firstName'); // taking data from the firstname text field on the request form 
+         $lastname  = $req->input('lastName'); // taking data form the lastname text field on the request form
+         $phone_num = $req->input('phone_number'); // ||
+         $received_date = $req -> input('receivedDate');
+         $moveInDate = $req -> input('moveInDate');
+         $address   = $req->input('address'); // ||
+         $address2  = $req->input('address2');
+         $city      = $req->input('city');
+         $state     = $req->input('state');
+         $zip       = $req->input('zip');
+         $numAdults = $req->input('numberofAdults'); //||
+         $numkids   = $req->input('numberofChildren');
+         $agency    = $req->input('agency');
+         $advocate_FirstName = $req -> input('advocatefirstName');
+         $advocate_Lastname = $req -> input('advocatelastName');
+         $dob  = $req -> input('dob');
+         $gender = $req ->input('Gender');
+         $maritalstatus = $req -> input('MaritalStatus'); 
+         $email = $req ->input('email');
+         
+        $data = array('headofhousehold_firstname' => $firstname,
+                      "headofhousehold_lastname" => $lastname,
+                       "phone" => $phone_num,
+                       "address" => $address,
+                       "address2" => $address2,
+                        "City" => $city,
+                        "State" => $state,
+                        "Zip" => $zip,
+                        "numofadults" => $numAdults, 
+                        "numofkids" => $numkids, 
+                        "agency" => $agency, 
+                        "Advocate_FirstName" =>  $advocate_FirstName, 
+                        "Advocate_LastName" =>  $advocate_Lastname,
+                         "DOB" => $dob,
+                        "Gender" =>$gender,
+                        "MaritalStatus" => $maritalstatus,
+                        "receivedDate" =>  $received_date,
+                        "MoveInDate" =>  $moveInDate,
+                        "Email" => $email,
+                        );
+       
+     // testing to send into pending case 
+     
+       
+     // DB::table('family')->insert($data);
 
-
-
-                       
-</div>
-
-</div>
-</div>
-</div>
-
-                          
-                                        
-                                        
- <!--<script src="increment.js"></script> 
-                                     <script src="submit.js"></script>
-                                   
-
-
-                                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+     //check to see if the data already exists in the database before inserting it.
+     // check if a record with the same phone number already exists in the family table and only insert the data if it doesn't exist.
+     $existingRecord = DB::table('family')
+     ->where('phone', $phone_num)
+     ->first();
  
-                                        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js" integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
-                                        <script src="https://cdnjs.cloudflare.com/ajax/libs/parsley.js/2.9.2/parsley.min.js" integrity="sha512-eyHL1atYNycXNXZMDndxrDhNAegH2BDWt1TmkXJPoGf1WLlNYt08CSjkqF5lnCRmdm3IrkHid8s2jOUY4NIZVQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>   
-                                        
-                                        <script src="global.min.js"></script>
-                                        <script src="quixnav-init.js"></script>
-                                        <script src="custom.min.js"></script> 
-                                        <script src="jquery.steps.min.js"></script>      
-                                        <script src="jquery.validate.min.js"></script> 
-                                        <script src="jquery.validate-init.js"></script>
-                                        <script src="jquery.dataTables.min.js"></script>
-                                        
-                                        <script src="datatables.init.js"></script>
-                                        <script src="jquery-steps-init.js"></script>    -->                              
-                                        
-                                      
-                                       
-                                        <script>
-        function formatPhoneNumber(input) {
-            // Remove all non-digit characters
-            const cleaned = input.value.replace(/\D/g, '');
-            // Define the parts of the phone number
-            const part1 = cleaned.substring(0, 3);
-            const part2 = cleaned.substring(3, 6);
-            const part3 = cleaned.substring(6, 10);
-            // Format the phone number
-            if (cleaned.length > 6) {
-                input.value = `${part1}-${part2}-${part3}`;
-            } else if (cleaned.length > 3) {
-                input.value = `${part1}-${part2}`;
-            } else if (cleaned.length > 0) {
-                input.value = part1;
+ // insert data only if record doesn't exist
+ if (!$existingRecord) {
+     $data = array(
+         'headofhousehold_firstname' => $firstname,
+         'headofhousehold_lastname' => $lastname,
+         'phone' => $phone_num,
+         'address' => $address,
+         'address2' => $address2,
+         'City' => $city,
+         'State' => $state,
+         'Zip' => $zip,
+         'numofadults' => $numAdults,
+         'numofkids' => $numkids,
+         'agency' => $agency,
+         'Advocate_FirstName' =>  $advocate_FirstName, 
+         'Advocate_LastName' =>  $advocate_Lastname,
+         'DOB' => $dob,
+         'Gender' =>$gender,
+         'MaritalStatus' => $maritalstatus,
+         'receivedDate' =>  $received_date,
+         'MoveInDate' =>  $moveInDate,
+         'Email' => $email,
+     );
+    }
+  
+       
+     
+   
+       
+   
+ /*======================THE ABOVE CODE IS FOR THE FIRST PART OF THE MULTI FORM IT WORKS ===================*/ 
+
+        // handling the second section of the multi step form for family_demographics
+        // ===============================this is the adult section ========================================
+          
+        // the adult first name
+      // Initialize arrays to store extracted data
+$adult_first_names = [];
+$adult_last_names = [];
+$adult_age = [];
+$adult_gender = [];
+
+// Extract first names
+foreach ($_POST as $key => $value) {
+    if (strpos($key, "adult") === 0 && strpos($key, "FirstName") !== false) {
+        $adult_number = intval(str_replace("adult", "", str_replace("FirstName", "", $key)));
+        $adult_first_names[$adult_number] = $value;
+    }
+}
+
+// Extract last names
+foreach ($_POST as $key => $value) {
+    if (strpos($key, "adult") === 0 && strpos($key, "LastName") !== false) {
+        $adult_number = intval(str_replace("adult", "", str_replace("LastName", "", $key)));
+        $adult_last_names[$adult_number] = $value;
+    }
+}
+
+
+
+// Extract ages
+foreach ($_POST as $key => $value) {
+    if (strpos($key, "adult") === 0 && strpos($key, "Age") !== false) {
+        $adult_number = intval(str_replace("adult", "", str_replace("Age", "", $key)));
+        $adult_age[$adult_number] = $value;
+    }
+}
+
+
+
+// Extract genders
+foreach ($_POST as $key => $value) {
+    if (strpos($key, "adult") === 0 && strpos($key, "Gender") !== false) {
+        $adult_number = intval(str_replace("adult", "", str_replace("Gender", "", $key)));
+        $adult_gender[$adult_number] = $value;
+    }
+}
+ 
+
+         /// the above code for adults works fine 
+          // ===============================this is the child section ========================================
+        
+          // getting the child first name
+          $child_first_names = array();
+           // Loop over $_POST array to find all keys starting with "Child"
+            foreach ($_POST as $key => $value){
+            if(strpos($key, "Child") === 0 && strpos($key, "FirstName") !== false){
+
+                // extract the child firstname from the key
+                $key =str_replace("FirstName", "", $key);
+                $firstname_parts = explode("Child", $key);
+                $child_firstname_number = intval($firstname_parts[1]);
+
+                $childrenFirstName = $value;
+
+                // this code is okay but wont be used: $child_first_names[] ="Child ". $child_firstname_number . " firstname is ". $childrenFirstName;
+                $child_first_names[] =  $childrenFirstName;
+            }
+
+          }
+
+          // getting the child last name
+
+          $child_last_names = array();
+
+          //Loop ofver $_POST array to find all keys starting with Child
+
+          foreach($_POST as $key => $value){
+             if(strpos($key, "Child") === 0 && strpos($key, "LastName") !== false){
+                // extract the child last name from the key 
+
+                $key = str_replace("LastName", "" , $key);
+                $lastname_parts = explode("Child", $key);
+                $child_lastname_number = intval($lastname_parts[1]);
+
+                $childrenlastname = $value;
+
+                // this code is okay but wont be used: $child_last_names[] = "Child". $child_lastname_number . "lastname is". $childrenlastname;
+                $child_last_names[] =   $childrenlastname;
+             }
+          }
+        
+           //the Child age 
+        $child_age = array();
+        // Loop over $_POST array to find all keys starting with adults in age input 
+
+        foreach($_POST as $key => $value){
+            if(strpos($key, "Child") === 0 && strpos($key, "Age") !== false) {
+                // extract the age from the key
+                $key = str_replace("Age", "", $key);
+                $child_ageParts = explode("Child", $key);
+
+                $child_agenumber = intval($child_ageParts[1]);
+                //extract the age from the value
+                $Children_age = $value !== '' ? intval($value) : null;
+
+                // add age to the array
+               // this code is okay but wont be used: $child_age[] = "Child".$child_agenumber."age is :".$Children_age;
+                
+                $child_age[$child_agenumber] = $Children_age;
             }
         }
-    </script>                         
-                                      
-                                        
 
+         // looping and  getting the gender for each Child
+         $child_gender = array();
+
+         foreach ($_POST as $key => $value) {
+             if (strpos($key, "Child") === 0 && strpos($key, "Gender") !== false) {
+                 // extract the adult number from the key
+                 $key = str_replace("Gender", "", $key);
+                 $c_parts = explode("Child", $key);
+                 $child_number = intval($c_parts[1]);
+         
+                 // extract the gender from the value
+                 $childgender = $value;
+         
+                 // add the gender to the array
+                // this code is okay but wont be used: $child_gender[] = "Child " . $child_number . " gender is " . $childgender;
+
+                 $child_gender[] = $childgender;
+             }
+         
+         }
+
+         
+         // submit to family_demographics table 
+
+          // create a new row in the `family` table and get its `id`
+
+ 
+        
+ $familyId = DB::table('family')->insertGetId($data);
+
+
+ 
   
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  <script src="global.min.js"></script>
-<script src="quixnav-init.js"></script>
-<script src="jquery.validate.min.js"></script>  <script src="jquery.validate-init.js"></script>
-<script src="increment.js"></script>
-<script src="submit.js"></script>
-<script src="jquery.steps.min.js"></script>
-<script src="jquery-steps-init.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/parsley.js/2.9.2/parsley.min.js" integrity="sha512-eyHL1atYNycXNXZMDndxrDhNAegH2BDWt1TmkXJPoGf1WLlNYt08CSjkqF5lnCRmdm3IrkHid8s2jOUY4NIZVQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="jquery.dataTables.min.js"></script>
-<script src="datatables.init.js"></script>
-<script src="custom.min.js"></script>
 
 
-  
-    <!-- momment js is must -->
-    <script src="moment.min.js"></script>
+ /* the  following code loops the the arrays for child info to submit to database */
+ // Insert child data into the family_demographics table
+ // for each child in the $child_first_names array
+ foreach ( $child_first_names as $key => $value) {
+    DB::table('family_demographics')->insert([
+        'firstname' => $value,
+        'lastname' => $child_last_names[$key],
+        'age' => $child_age[$key],
+        'gender' => $child_gender[$key],
+        'family_id' => $familyId
+    ]);
+ }
+
+ /* the  following code loops the the arrays for adult info to submit to database */
+ // Insert adult data into the family_demographics table
+ // for each adult in the $child_first_names array
+
+ foreach ($adult_first_names as $key => $first_name) {
+    DB::table('family_demographics')->insert([
+        'firstname' => $first_name,
+        'lastname' => $adult_last_names[$key] ?? '', // Handle missing last name
+        'age' => $adult_age[$key] ?? null, // Handle missing age
+        'gender' => $adult_gender[$key] ?? '', // Handle missing gender
+        'family_id' => $familyId // Ensure $familyId is defined and valid
+    ]);
+}
+
+ 
+
+
+        // $fd_data = array('firstname' => $adult_first_names, 'firstname' => $child_first_names, 'lastname' => $adult_last_names, 'lastname' => $child_last_names, 'age' => $adult_age, 'age' => $child_age, 'gender' =>  $adult_gender , 'gender' => $child_gender);
+        // DB::table('family_demographics') -> insert($fd_data);
+ 
+    //dd([$adult_first_names, $adult_last_names, $adult_age, $adult_gender, $child_first_names,$child_last_names, $child_age,$child_gender]);
+
+    /*======================THE ABOVE CODE IS FOR THE SECOND PART OF THE MULTI FORM IT WORKS ===================*/ 
+/*
+     $orderQuantities = $req->input('quantity');
+
+     // Retrieve all categories with their products and the products' inventories
+     $categories = Category::with(['products.inventories'])->get();
+ 
+     $orderItems = [];
+     $categoryTotals = [];
+ 
+     foreach ($categories as $category) {
+         foreach ($category->products as $product) {
+             if (isset($orderQuantities[$product->id]) && $orderQuantities[$product->id] > 0) {
+                 $quantity = $orderQuantities[$product->id];
+                 $orderItems[] = [
+                     'category' => $category->category_name,
+                     'product_name' => $product->product_name,
+                     'quantity' => $quantity
+                 ];
+ 
+                 if (!isset($categoryTotals[$category->category_name])) {
+                     $categoryTotals[$category->category_name] = 0;
+                 }
+                 $categoryTotals[$category->category_name] += $quantity;
+             }
+         }
+     }
+ 
+     // Log or dump the order items and category totals for debugging
+    //dd('Order Items:', $orderItems);
+    //dd('Category Totals:', $categoryTotals);
+
+
+     foreach ($orderItems as $orderItem) {
+         DB::table('requestorder')->insert([
+             'family_id' => $familyId,
+             'category' => $orderItem['category'],
+             'categoryTotal' => $categoryTotals[$orderItem['category']],
+             'requestedItem' => $orderItem['product_name'],
+             'amountNeeded' => $orderItem['quantity'],
+             'daterequested' => now()
+         ]);
+     }
+    */
+    
+    // Store selected quantities in the session before proceeding
+$existingQuantities = $req->session()->get('quantities', []);
+$newQuantities = $req->input('quantity', []);
+
+$mergedQuantities = array_merge($existingQuantities, $newQuantities);
+
+$req->session()->put('quantities', $mergedQuantities);
+dd($req->session()->get('quantities'));
+
+// Retrieve all categories with their products and the products' inventories
+$categories = Category::with(['products.inventories'])->get();
+
+$orderItems = [];
+$categoryTotals = [];
+
+foreach ($categories as $category) {
+    foreach ($category->products as $product) {
+        if (isset($mergedQuantities[$product->id]) && $mergedQuantities[$product->id] > 0) {
+            $quantity = $mergedQuantities[$product->id];
+            $orderItems[] = [
+                'category' => $category->category_name,
+                'product_name' => $product->product_name,
+                'quantity' => $quantity
+            ];
+
+            if (!isset($categoryTotals[$category->category_name])) {
+                $categoryTotals[$category->category_name] = 0;
+            }
+            $categoryTotals[$category->category_name] += $quantity;
+        }
+    }
+}
+
+// Optional: Log or dump the order items and category totals for debugging
+// dd('Order Items:', $orderItems);
+// dd('Category Totals:', $categoryTotals);
+
+foreach ($orderItems as $orderItem) {
+    DB::table('requestorder')->insert([
+        'family_id' => $familyId,
+        'category' => $orderItem['category'],
+        'categoryTotal' => $categoryTotals[$orderItem['category']],
+        'requestedItem' => $orderItem['product_name'],
+        'amountNeeded' => $orderItem['quantity'],
+        'daterequested' => now()
+    ]);
+}
+
+// Clear session after order is submitted
+$req->session()->forget('quantities');
+
+
+
+ $pdf = PDF::loadView('pdf_layout', [
    
+    'headofhousehold_firstname' => $firstname,
+    'headofhousehold_lastname' => $lastname,
+    'phone' => $phone_num,
+    'address' => $address,
+    'address2' => $address2,
+    'City' => $city,
+    'State' => $state,
+    'Zip' => $zip,
+    'numofadults' => $numAdults,
+    'numofkids' => $numkids,
+    'agency' => $agency,
+    'advocatefirstName' => $advocate_FirstName,
+    'advocatelastName' => $advocate_Lastname,
+    'Gender' => $gender,
+    'MaritalStatus' => $maritalstatus,
+    'receivedDate' => $received_date,
+    'MoveInDate' => $moveInDate,
+    'adult_first_names' => $adult_first_names,
+    'adult_last_names' => $adult_last_names,
+    'adult_age' => $adult_age,
+    'adult_gender' => $adult_gender,
+    'child_first_names' => $child_first_names,
+    'child_last_names' => $child_last_names,
+    'child_age' => $child_age,
+    'child_gender' => $child_gender,
+    'orderItems' => $orderItems,
+    
 
 
+ ]); 
 
-@endsection
+ $pdfdata = $pdf ->output();
+
+ DB::table('client_data') -> insert([
+
+    'family_id' => $familyId,
+    'client_file'=> $pdfdata,
+    'created_at' => now(),
+    'updated_at' => now()
+
+ ]); 
+ 
+
+// taking main data to create basic profile to be displayed on pending case 
+
+  DB::table('pendingcase') -> insert([
+     'firstname' => $firstname,
+     'lastname' => $lastname,
+     'family_id' => $familyId,
+     'phone' =>$phone_num,
+     'address' => $address,
+     'receivedDate' => $received_date,
+     'MoveInDate' =>  $moveInDate,
+     'daterequested' =>  now() 
+  ]);
+
+
+ 
+    return redirect()->back()->with('success', 'Data inserted successfully.');
+  
+    }
+
+    
+}
